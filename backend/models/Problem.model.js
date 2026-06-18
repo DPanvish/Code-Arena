@@ -22,8 +22,14 @@ const problemSchema = new mongoose.Schema({
         default: 256
     },
     testCases: [{
-        input: String,
-        expectedOutput: String,
+        input: {
+            type: String,
+            required: true
+        },
+        expectedOutput: {
+            type: String,
+            required: true
+        },
         isHidden: {
             type: Boolean,
             default: false
