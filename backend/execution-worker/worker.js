@@ -1,29 +1,52 @@
 import { Worker } from 'bullmq';
-import { exec } from 'child_process';
+import IORedis from 'ioredis';
+import { execFile } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import util from 'util';
 
-const execAsync = util.promisify(exec);
+const execFileAsync = util.promisify(execFile);
+const LANGUAGE_EXTENSIONS = new Map([
+  ['cpp', 'cpp'],
+  ['py', 'py'],
+  ['python', 'py'],
+]);
 const ENGINE_PATH = path.resolve('../execution-engine/engine');
 
 const worker = new Worker('CodeSubmissions', async (job) => {
   const { code, language, problemId, userId } = job.data;
   
-  const ext = language === 'cpp' ? 'cpp' : 'py';
+  const ext = LANGUAGE_EXTENSIONS.get(language);
+  if (!ext) {
+    throw new Error(`Unsupported language: ${language}`);
+  }
   const filename = `${uuidv4()}.${ext}`;
   const tempPath = path.join(__dirname, 'temp', filename);
 
   try {
     await fs.writeFile(tempPath, code);
     
-    const { stdout, stderr } = await execAsync(`${ENGINE_PATH} ${language} ${tempPath}`);
-    
+    let stdout = '';
+    let exitCode = 0;
+
+    try {
+      ({ stdout } = await execAsync(`${ENGINE_PATH} ${language} ${tempPath}`));
+    } catch (error) {
+      if (typeof error.code === 'number') {
+        stdout = error.stdout || '';
+        exitCode = error.code;
+      } else {
+        throw error;
+      }
+    }
+
     await fs.unlink(tempPath);
 
-    const results = { stdout, stderr, status: stderr ? 'Runtime Error' : 'Success' };
-    
+    const results = {
+      stdout,
+      status: exitCode === 0 ? 'Success' : 'Runtime Error'
+    };
     return results;
 
   } catch (error) {

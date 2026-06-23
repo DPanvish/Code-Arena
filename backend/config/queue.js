@@ -13,7 +13,13 @@ export const codeSubmissionQueue = new Queue('CodeSubmissions', {
       type: 'exponential',
       delay: 1000
     },
-    removeOnComplete: true, 
-    removeOnFail: false
+    removeOnComplete: { 
+        age: 3600, 
+        count: 1000 
+    },
+    removeOnFail: { 
+        age: 86400, 
+        count: 1000 
+    }
   }
 });
