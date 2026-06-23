@@ -1,38 +1,28 @@
-import { exec } from "child_process";
-import fs from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
-import util from "util";
+import { codeSubmissionQueue } from '../config/queue.js';
 
-const execAsync = util.promisify(exec);
+export const submitCode = async (req, res) => {
+  const { code, language, problemId, userId } = req.body;
 
-export const submitCode = async(req, res) => {
-    const {code, language, problemId} = req.body;
-    const fileExtension = language === 'cpp' ? 'cpp' : 'py'
-    const filePath = path.join(__dirname, '../temp', filename);
+  if (!code || !language || !problemId) {
+    return res.status(400).json({ error: 'Missing mandatory execution fields.' });
+  }
 
-    try {
-        await fs.writeFile(filePath, code);
+  try {
+    // Enqueue the heavy workload into Redis and return immediately
+    const job = await codeSubmissionQueue.add(`submit_${userId}_${problemId}`, {
+      code,
+      language,
+      problemId,
+      userId
+    });
 
-        const enginePath = path.join(__dirname, '../../execution-engine/engine');
-
-        const command = `${enginePath} ${language} ${filePath}`;
-        
-        const { stdout, stderr } = await execAsync(command);
-
-        await fs.unlink(filePath);
-
-        if (stderr) {
-             return res.status(400).json({ status: 'Error', output: stderr });
-        }
-        
-        
-        res.status(200).json({ status: 'Success', output: stdout });
-
-    } catch (error) {
-
-        try { await fs.unlink(filePath); } catch (e) { /* Ignore cleanup errors */ }
-        
-        res.status(500).json({ status: 'Server Error', message: error.message });
-    }
-}
+    // 202 Accepted implies the processing has started but is not finished
+    return res.status(202).json({
+      success: true,
+      message: 'Submission enqueued safely.',
+      jobId: job.id
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to queue the submission safely.' });
+  }
+};
