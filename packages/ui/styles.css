@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  /* Claymorphism Color Palette */
+  --color-clay-bg: #F8F7FF;
+  --color-clay-card: rgba(255, 255, 255, 0.72);
+  --color-primary-indigo: #6366f1;
+  --color-primary-violet: #8b5cf6;
+  --color-primary-cyan: #06b6d4;
+
+  /* Claymorphism Box Shadows (Layered for depth & inset rims) */
+  --shadow-clay-card: 0 8px 32px rgba(79, 70, 229, 0.18), inset 0 1.5px 0 0 #ffffff;
+  --shadow-clay-button: 0 4px 16px rgba(99, 102, 241, 0.3), inset 0 2px 0 0 rgba(255, 255, 255, 0.4);
+  --shadow-clay-button-active: 0 2px 8px rgba(99, 102, 241, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  /* Border Radii */
+  --radius-clay-card: 24px;
+  --radius-clay-button: 50px;
+}
+
+body {
+  background-color: var(--color-clay-bg);
+  font-family: 'Inter', sans-serif; /* Setup Next/Font separately */
+}
