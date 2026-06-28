@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "../../../../../../packages/db";
+import { prisma } from "../../../../../../packages/db/index";
 import bcrypt from "bcryptjs";
 
 
@@ -40,23 +40,26 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // Set short-lived access token logic here
       if (user) {
-        token.id = user.id;cd 
-        token.ratingTier = user.ratingTier;
+        // Use String() wrapper for safe assignment rather than "as string"
+        token.id = String(user.id);
+        if (user.ratingTier) {
+          token.ratingTier = String(user.ratingTier);
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token) {
-        session.user.id = token.id as string;
+        session.user.id = String(token.id);
+        // Explicitly map the token data to the session user
+        if (token.ratingTier) {
+           session.user.ratingTier = String(token.ratingTier);
+        }
       }
       return session;
     }
   },
-  pages: {
-    signIn: '/auth/login',
-  }
 };
 
 const handler = NextAuth(authOptions);

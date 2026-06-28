@@ -1,102 +1,36 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
-
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import { ClayCard } from '../../../packages/ui/components/Card';
+import { ClayButton } from '../../../packages/ui/components/Button';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="min-h-screen pt-32 px-4 max-w-7xl mx-auto flex flex-col items-center justify-center text-center">
+      <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-6">
+        Master Code. <br/>
+        <span className="bg-gradient-to-r from-primary-indigo to-primary-cyan bg-clip-text text-transparent">Conquer the Arena.</span>
+      </h1>
+      <p className="text-lg text-gray-600 mb-10 max-w-2xl">
+        The next-generation platform for competitive programming featuring real-time visualization, 1v1 challenges, and a robust gamified rating system.
+      </p>
+      
+      <div className="flex gap-6">
+        <ClayButton>Start Training</ClayButton>
+        <ClayButton variant="secondary">View Leaderboard</ClayButton>
+      </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full">
+        <ClayCard>
+          <h3 className="text-xl font-bold mb-2">Live Visualizer</h3>
+          <p className="text-gray-600">See your code execute step-by-step with real-time memory and AST tracking.</p>
+        </ClayCard>
+        <ClayCard>
+          <h3 className="text-xl font-bold mb-2">1v1 Battles</h3>
+          <p className="text-gray-600">Wager your tier badges in live, 30-minute head-to-head competitive sprints.</p>
+        </ClayCard>
+        <ClayCard>
+          <h3 className="text-xl font-bold mb-2">AI Integrity</h3>
+          <p className="text-gray-600">Fair play guaranteed through advanced MOSS and AI-generation detection.</p>
+        </ClayCard>
+      </div>
+    </main>
   );
 }

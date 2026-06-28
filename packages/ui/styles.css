@@ -20,5 +20,5 @@
 
 body {
   background-color: var(--color-clay-bg);
-  font-family: 'Inter', sans-serif; /* Setup Next/Font separately */
+  font-family: Inter, sans-serif; /* Setup Next/Font separately */
 }
