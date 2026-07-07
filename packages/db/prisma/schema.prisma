@@ -7,6 +7,27 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum SubmissionStatus {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+}
+
 
 model Account {
   id                 String  @id @default(cuid())
@@ -37,8 +58,11 @@ model User {
   passwordHash  String?
   ratingTier    String?   @default("Bronze")
   ratingScore   Int       @default(1000)
+  
+  role          Role      @default(USER)
+  submissions   Submission[]
 
-  accounts      Account[] 
+  accounts      Account[]
   sessions      Session[]
 }
 
@@ -56,4 +80,39 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Problem {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique // e.g., "two-sum" for clean URLs
+  description String      @db.Text
+  difficulty  Difficulty  @default(MEDIUM)
+  tags        String[]    // PostgreSQL supports string arrays natively!
+  
+  starterCode Json?       
+  testCases   Json?       
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  submissions Submission[]
+}
+
+model Submission {
+  id          String           @id @default(cuid())
+  userId      String
+  problemId   String
+  
+  code        String           @db.Text
+  language    String           
+  status      SubmissionStatus @default(PENDING)
+  
+  executionMs Int?
+  memoryKb    Int?
+
+  createdAt   DateTime         @default(now())
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
