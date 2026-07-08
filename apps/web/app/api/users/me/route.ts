@@ -1,9 +1,9 @@
-// apps/web/app/api/users/me/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../.././lib/auth";
 import { prisma } from "../../../../../../packages/db/index";
 
+// GET: Fetch the current user's profile and stats
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -40,6 +40,7 @@ export async function GET(req: Request) {
   }
 }
 
+// PATCH: Update the current user's profile (e.g., username)
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
