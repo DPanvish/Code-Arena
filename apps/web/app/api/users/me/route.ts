@@ -48,10 +48,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { name } = body;
+    const body = await req.json().catch(() => null);
+    const name = body?.name;
 
-    if (!name || name.trim().length < 3) {
+    if (typeof name !== "string" || name.trim().length < 3) {
       return NextResponse.json({ message: "Username must be at least 3 characters" }, { status: 400 });
     }
 

@@ -35,7 +35,11 @@ export const authOptions: NextAuthOptions = {
         if (!user || !user.passwordHash) return null;
         
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
-        return isValid ? user : null;
+        
+        if (!isValid) return null;
+        const { passwordHash, ...safeUser } = user;
+
+        return safeUser;
       }
     })
   ],
@@ -43,6 +47,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = String(user.id);
+        token.role = user.role;
         if (user.ratingTier) {
           token.ratingTier = String(user.ratingTier);
         }
@@ -52,6 +57,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token) {
         session.user.id = String(token.id);
+        session.user.role = token.role as string;
         if (token.ratingTier) {
            session.user.ratingTier = String(token.ratingTier);
         }
