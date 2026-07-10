@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../lib/auth";
-import { prisma, Difficulty } from "../../../../../packages/db/index";
+import { prisma, Difficulty, Prisma } from "../../../../../packages/db/index";
 
 // GET: Public Problem List (Pagination & Filtering)
 export async function GET(req: Request) {
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
 
     const difficulty = searchParams.get("difficulty") as Difficulty | null;
     const tag = searchParams.get("tag");
-    const whereClause: any = {};
+    const whereClause: Prisma.ProblemWhereInput = {};
     if (difficulty) whereClause.difficulty = difficulty;
     if (tag) whereClause.tags = { has: tag };
 
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
+    if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 

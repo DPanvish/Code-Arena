@@ -19,7 +19,7 @@ export default function CodeEditor({
   onRunSamples,
 }: CodeEditorProps) {
   const monaco = useMonaco();
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   
   // unique cache key for this specific problem and language
   const cacheKey = `codearena-cache-${problemId}-${language}`;

@@ -35,7 +35,7 @@ export default function LoginPage() {
       // 2. Success! Redirect to homepage and refresh the layout
       router.push("/");
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.");
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="text-primary-indigo font-bold hover:underline">
               Sign Up
             </Link>
