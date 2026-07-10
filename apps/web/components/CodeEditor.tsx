@@ -20,6 +20,14 @@ export default function CodeEditor({
 }: CodeEditorProps) {
   const monaco = useMonaco();
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+
+  const onSubmitRef = useRef(onSubmit);
+  const onRunSamplesRef = useRef(onRunSamples);
+
+  useEffect(() => {
+    onSubmitRef.current = onSubmit;
+    onRunSamplesRef.current = onRunSamples;
+  });
   
   // unique cache key for this specific problem and language
   const cacheKey = `codearena-cache-${problemId}-${language}`;
@@ -66,7 +74,7 @@ export default function CodeEditor({
       monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter,
       () => {
         const currentCode = editor.getValue();
-        onSubmit(currentCode);
+        onSubmitRef.current(currentCode);
       }
     );
 
@@ -75,7 +83,7 @@ export default function CodeEditor({
       monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyR,
       () => {
         const currentCode = editor.getValue();
-        onRunSamples(currentCode);
+        onRunSamplesRef.current(currentCode);
       }
     );
   };
