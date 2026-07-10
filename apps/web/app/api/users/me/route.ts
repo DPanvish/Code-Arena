@@ -22,7 +22,6 @@ export async function GET() {
         ratingTier: true,
         ratingScore: true,
         role: true,
-        createdAt: true,
         _count: {
           select: { submissions: true } 
         }
