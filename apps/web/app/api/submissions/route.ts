@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../lib/auth";
 import { prisma } from "../../../../../packages/db/index";
-import { submissionQueue } from "../../../lib/auth";
+import { submissionQueue } from "../../../lib/queue";
 
 export async function POST(req: Request) {
   try {

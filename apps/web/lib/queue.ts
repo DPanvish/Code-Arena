@@ -8,7 +8,7 @@ const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379"
 
 // Instantiate the Submission Queue
 export const submissionQueue = new Queue("submissions", { 
-  connection,
+  connection: connection as any,
   defaultJobOptions: {
     removeOnComplete: true, // Keep Redis memory clean
     removeOnFail: false,    // Keep failed jobs for debugging
