@@ -6,6 +6,10 @@ const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379"
   maxRetriesPerRequest: null, // Required by BullMQ
 });
 
+connection.on("error", (err) => {
+  console.error("Redis connection error:", err.message);
+});
+
 // Instantiate the Submission Queue
 export const submissionQueue = new Queue("submissions", { 
   connection: connection as any,

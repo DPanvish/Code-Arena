@@ -5,7 +5,7 @@ import { prisma } from '../../packages/db/index';
 console.log("🚀 Judge Worker booting up...");
 
 // Connect to the same Redis container we just spun up
-const connection = new IORedis("redis://localhost:6379", {
+const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
 

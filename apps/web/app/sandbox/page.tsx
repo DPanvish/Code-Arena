@@ -7,9 +7,12 @@ export default function SandboxPage() {
   const [status, setStatus] = useState<string>("Initializing...");
 
   useEffect(() => {
-    // Fetch the ID of the problem we created in Phase 1.3
-    fetch('/api/problems?limit=1')
-      .then(res => res.json())
+    const controller = new AbortController();
+    fetch('/api/problems?limit=1', { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (data.problems && data.problems.length > 0) {
           setProblemId(data.problems[0].id);
@@ -17,7 +20,11 @@ export default function SandboxPage() {
         } else {
           setStatus("No problems found in database.");
         }
+      })
+      .catch(() => {
+        setStatus("Failed to load problems.");
       });
+    return () => controller.abort();
   }, []);
 
   const handleSubmit = async (code: string) => {
@@ -43,7 +50,7 @@ export default function SandboxPage() {
       } else {
         setStatus(`Error: ${data.message}`);
       }
-    } catch (error) {
+    } catch{
       setStatus("Failed to reach server.");
     }
   };

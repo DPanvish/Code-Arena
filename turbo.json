@@ -5,7 +5,8 @@
     "GOOGLE_CLIENT_SECRET",
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
-    "DATABASE_URL"
+    "DATABASE_URL",
+    "REDIS_URL"
   ],
   "ui": "tui",
   "tasks": {
