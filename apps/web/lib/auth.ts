@@ -7,11 +7,16 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "../../../packages/db/index"; 
 import bcrypt from "bcryptjs";
 
+const SUPERUSER_EMAIL = process.env.SUPERUSER_EMAIL;
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60,
+  },
+  pages: { 
+    signIn: '/login' 
   },
   providers: [
     GoogleProvider({
@@ -50,28 +55,50 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (SUPERUSER_EMAIL && user.email === SUPERUSER_EMAIL) {
+        try {
+          await prisma.user.update({
+            where: { email: SUPERUSER_EMAIL },
+            data: { role: "ADMIN" }
+          });
+          (user as any).role = "ADMIN";
+          console.log(`👑 Superuser privileges granted to ${SUPERUSER_EMAIL}`);
+        } catch (error) {
+          console.error("Superuser promotion error:", error);
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = String(user.id);
-        token.role = user.role;
-        if (user.ratingTier) {
-          token.ratingTier = String(user.ratingTier);
+        token.role = (user as any).role;
+        if ((user as any).ratingTier) {
+          token.ratingTier = String((user as any).ratingTier);
         }
       }
+      
+      if (SUPERUSER_EMAIL && token.email === SUPERUSER_EMAIL) {
+        token.role = "ADMIN";
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (session.user && token) {
         session.user.id = String(token.id);
-        session.user.role = token.role as string;
+        (session.user as any).role = token.role as string;
+        
         if (token.ratingTier) {
-           session.user.ratingTier = String(token.ratingTier);
+          (session.user as any).ratingTier = String(token.ratingTier);
+        }
+
+        if (SUPERUSER_EMAIL && session.user.email === SUPERUSER_EMAIL) {
+          (session.user as any).role = "ADMIN";
         }
       }
       return session;
     }
-  },
-  pages: {
-    signIn: '/login',
   },
 };
