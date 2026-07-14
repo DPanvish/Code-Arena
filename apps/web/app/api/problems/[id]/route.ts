@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../../lib/auth";
-import { prisma } from "@codearena/db";
+import { authOptions } from "../../../../lib/auth";
+import { prisma } from "../../../../../../packages/db/index";
 
 // PUT: Admin Update a Specific Problem
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
+    if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const problemId = params.id;
+    const { id: problemId } = await params;
     const body = await req.json();
     
     const { title, slug, description, difficulty, tags, starterCode, testCases } = body;
@@ -46,15 +46,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE: Admin Delete a Specific Problem
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
+    if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const problemId = params.id;
+    const { id: problemId } = await params;
 
     const existingProblem = await prisma.problem.findUnique({
       where: { id: problemId }

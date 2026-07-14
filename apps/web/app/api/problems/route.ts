@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../lib/auth";
-import { prisma, Difficulty } from "../../../../../packages/db/index";
+import { prisma, Prisma } from "../../../../../packages/db/index";
+
+type Difficulty = "EASY" | "MEDIUM" | "HARD";
+
+const isDifficulty = (value: string | null): value is Difficulty =>
+  value === "EASY" || value === "MEDIUM" || value === "HARD";
 
 // GET: Public Problem List (Pagination & Filtering)
 export async function GET(req: Request) {
@@ -12,9 +17,10 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
-    const difficulty = searchParams.get("difficulty") as Difficulty | null;
+    const difficultyParam = searchParams.get("difficulty");
+    const difficulty = isDifficulty(difficultyParam) ? difficultyParam : null;
     const tag = searchParams.get("tag");
-    const whereClause: any = {};
+    const whereClause: Prisma.ProblemWhereInput = {};
     if (difficulty) whereClause.difficulty = difficulty;
     if (tag) whereClause.tags = { has: tag };
 
@@ -56,7 +62,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
+    if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
@@ -77,7 +83,7 @@ export async function POST(req: Request) {
         title,
         slug,
         description,
-        difficulty: difficulty || "MEDIUM",
+        difficulty: isDifficulty(difficulty) ? difficulty : "MEDIUM",
         tags: tags || [],
         starterCode: starterCode || {},
         testCases: testCases || {}

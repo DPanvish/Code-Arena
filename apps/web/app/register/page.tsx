@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { ClayCard } from "../../../../packages/ui/components/Card";
 import { ClayButton } from "../../../../packages/ui/components/Button";
 
@@ -42,8 +41,8 @@ export default function RegisterPage() {
 
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
