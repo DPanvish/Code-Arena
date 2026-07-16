@@ -1,50 +1,57 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { prisma } from '../../packages/db/index';
+import { prisma } from '@codearena/db';
+import { runCodeInDocker } from './runner'; 
 
 console.log("🚀 Judge Worker booting up...");
 
-// Connect to the same Redis container we just spun up
-const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
+const connection = new IORedis("redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
 
 const worker = new Worker('submissions', async (job) => {
-  console.log(`\n📥 Received Submission ID: ${job.data.submissionId}`);
-  console.log(`💻 Language: ${job.data.language}`);
+  console.log(`\n📥 Processing Submission: ${job.data.submissionId}`);
   
   const { submissionId, code, language, testCases } = job.data;
 
   try {
-    // Update DB to show we have begun processing
     await prisma.submission.update({
       where: { id: submissionId },
-      data: { status: "PENDING" } 
+      data: { status: "PENDING" }
     });
 
-    // TODO: Containerized Execution
-    console.log(`⚙️ Executing code in isolated container...`);
+    console.log(`⚙️ Booting Docker sandbox for ${language}...`);
     
-    // Simulating the time it takes to run a Docker container for now
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // EXECUTE THE CODE IN DOCKER
+    const startTime = Date.now();
+    const output = await runCodeInDocker(code, language);
+    const executionMs = Date.now() - startTime;
 
-    //  Update DB with final verdict (Stubbed as ACCEPTED for testing)
+    console.log(`📦 Output from container:`, output);
+    
+    // For now, if it ran without crashing, we mark it Accepted
     await prisma.submission.update({
       where: { id: submissionId },
       data: { 
         status: "ACCEPTED", 
-        executionMs: Math.floor(Math.random() * 50) + 10, // Fake MS
-        memoryKb: 2048 
+        executionMs,
+        memoryKb: 0
       }
     });
 
-    console.log(`✅ Submission ${submissionId} graded: ACCEPTED`);
+    console.log(`✅ Submission ${submissionId} graded: ACCEPTED in ${executionMs}ms`);
     
-  } catch (error) {
-    console.error(`❌ Error grading ${submissionId}:`, error);
+  } catch (error: any) {
+    console.error(`❌ Error grading ${submissionId}:`, error.message);
+    
+    // Determine if it was our 2-second timeout or a code crash
+    const finalStatus = error.message === 'TIME_LIMIT_EXCEEDED' 
+      ? 'TIME_LIMIT_EXCEEDED' 
+      : 'RUNTIME_ERROR';
+
     await prisma.submission.update({
       where: { id: submissionId },
-      data: { status: "RUNTIME_ERROR" }
+      data: { status: finalStatus }
     });
   }
 }, { connection: connection as any });
