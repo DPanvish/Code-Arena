@@ -21,15 +21,23 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
 
     let output = '';
     let errorOutput = '';
+    const MAX_OUTPUT_SIZE = 1024 * 1024;
 
     // Capture standard output (console.logs)
     dockerProcess.stdout.on('data', (data) => {
-      output += data.toString();
+      if (output.length < MAX_OUTPUT_SIZE) {
+        output += data.toString();
+        if (output.length >= MAX_OUTPUT_SIZE) {
+          dockerProcess.kill();
+        }
+      }
     });
 
     // Capture errors
     dockerProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString();
+      if (errorOutput.length < MAX_OUTPUT_SIZE) {
+        errorOutput += data.toString();
+      }
     });
 
     // Inject the user's code securely into the container

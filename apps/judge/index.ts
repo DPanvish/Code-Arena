@@ -6,7 +6,9 @@ import { runCodeInDocker } from './runner';
 
 console.log("🚀 Judge Worker booting up...");
 
-const connection = new IORedis("redis://localhost:6379", { maxRetriesPerRequest: null });
+const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
+  maxRetriesPerRequest: null,
+});
 
 const worker = new Worker('submissions', async (job) => {
   console.log(`\n📥 Processing Submission: ${job.data.submissionId}`);
