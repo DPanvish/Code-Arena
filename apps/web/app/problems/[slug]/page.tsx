@@ -15,6 +15,14 @@ export default async function DynamicProblemPage({ params }: ProblemPageProps) {
 
   const problem = await prisma.problem.findUnique({
     where: { slug },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      description: true,
+      difficulty: true,
+      tags: true,
+    },
   });
 
   if (!problem) {
