@@ -22,7 +22,7 @@ export default async function DynamicProblemPage({ params }: ProblemPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#09090b] pt-24 px-8 pb-8 flex flex-col">
+    <main className="h-screen bg-[#09090b] pt-24 px-8 pb-8 flex flex-col">
       <ProblemWorkspace problem={problem} />
     </main>
   );

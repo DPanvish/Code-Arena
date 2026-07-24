@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import CodeEditor from "../../../components/CodeEditor";
-
 
 interface ProblemWorkspaceProps {
   problem: {
@@ -20,7 +21,6 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
 
   const handleSubmit = async (code: string) => {
     setStatus("Transmitting to Judge Worker...");
-
     try {
       const res = await fetch("/api/submissions", {
         method: "POST",
@@ -33,10 +33,8 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
       });
 
       const data = await res.json();
-
       if (res.ok) {
         setStatus(`Enqueued! Submission ID: ${data.submissionId.slice(-8)}`);
-        // TODO: Later, we will use WebSockets here to listen for the live verdict
       } else {
         setStatus(`Error: ${data.message}`);
       }
@@ -47,9 +45,10 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 shrink-0">
         <h1 className="text-white text-2xl font-extrabold flex items-center gap-4">
           <span className="text-gray-600">Arena /</span>
           {problem.title}
@@ -59,12 +58,12 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
         </div>
       </div>
 
-      {/* Main Workspace (Description left, Editor right) */}
-      <div className="flex-grow flex gap-6 overflow-hidden">
+      {/* Main Workspace - Added 'min-h-0' to fix Monaco collapse */}
+      <div className="flex-grow flex gap-6 overflow-hidden min-h-0">
         
         {/* LEFT PANE: Problem Description */}
         <div className="w-1/3 h-full bg-[#121217] rounded-xl border border-white/10 p-6 overflow-y-auto shadow-clay-card flex flex-col custom-scrollbar">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 shrink-0">
             <h2 className="text-2xl font-bold text-white">{problem.title}</h2>
             <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider ${
               problem.difficulty === 'EASY' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
@@ -75,7 +74,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             </span>
           </div>
           
-          <div className="flex flex-wrap gap-2 mb-6 border-b border-white/5 pb-6">
+          <div className="flex flex-wrap gap-2 mb-6 border-b border-white/5 pb-6 shrink-0">
             {problem.tags?.map((tag: string) => (
               <span key={tag} className="px-2 py-1 bg-white/5 text-gray-400 text-xs rounded-md">
                 {tag}
@@ -83,24 +82,39 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             ))}
           </div>
 
-          {/* Render the description, respecting \n line breaks */}
-          <div className="text-gray-300 leading-relaxed font-sans pt-2 whitespace-pre-wrap">
-            {problem.description || "No description provided."}
+          {/* Premium Markdown Renderer */}
+          <div className="text-gray-300 leading-relaxed font-sans pt-2">
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-1" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-4 space-y-1" {...props} />,
+                code: ({node, inline, ...props}: any) => 
+                  inline ? (
+                    <code className="px-1.5 py-0.5 bg-white/10 text-primary-cyan rounded font-mono text-sm" {...props} />
+                  ) : (
+                    <code className="block bg-black/50 border border-white/10 p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto text-primary-cyan custom-scrollbar" {...props} />
+                  )
+              }}
+            >
+              {problem.description || "No description provided."}
+            </ReactMarkdown>
           </div>
         </div>
 
         {/* RIGHT PANE: Monaco Editor */}
-        <div className="w-2/3 h-full relative group">
+        <div className="w-2/3 h-full relative group rounded-xl overflow-hidden border border-white/10 shadow-clay-card">
           <CodeEditor
             problemId={problem.id}
             language="node"
-            // Start with a generic placeholder for now
             defaultCode={`// Press Ctrl + Enter to submit\nfunction solution(inputs) {\n    // Write your logic here\n}\n`}
             onSubmit={handleSubmit}
-            onRunSamples={() => setStatus("Sample running coming later in Phase 4.")}
+            onRunSamples={() => setStatus("Sample running coming later.")}
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }
