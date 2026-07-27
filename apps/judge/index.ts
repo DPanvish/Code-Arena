@@ -45,10 +45,11 @@ const worker = new Worker('submissions', async (job) => {
 
         // --- ARENA JUDGE WRAPPER ---
         try {
-          const result = twoSum(${tc.input});
+          const result = solution(${tc.input});
           console.log(JSON.stringify(result));
         } catch(e) {
-          console.error(e.message);
+          console.error("Runtime Error:", e.message);
+          process.exit(1); // Force a non-zero exit so Docker knows it crashed
         }
       `;
 

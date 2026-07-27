@@ -3,11 +3,13 @@ import { prisma } from "../../../../../../packages/db/index";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     const submission = await prisma.submission.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         status: true,
         executionMs: true,
