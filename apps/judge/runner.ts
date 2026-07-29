@@ -1,3 +1,4 @@
+// apps/worker/runner.ts (or wherever your runner is located)
 import { spawn } from 'child_process';
 
 export const runCodeInDocker = (code: string, language: string): Promise<string> => {
@@ -7,23 +8,27 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
       return reject(new Error(`Language ${language} is not supported yet.`));
     }
 
-    // The core Docker execution command enforcing all security limits
+    // The core Docker execution command enforcing ALL security limits
     const dockerProcess = spawn('docker', [
       'run', 
-      '--rm',            // Instantly destroy the container after execution
-      '-i',              // Interactive mode (keeps stdin open)
-      '--network', 'none', // STRIKE 1: No network access
-      '--memory', '256m',  // STRIKE 2: 256 MB RAM limit
-      '--cpus', '0.5',     // Limit CPU usage
-      'node:18-alpine',    // The execution image
-      'node', '-'          // The '-' tells Node.js to read the code from stdin
+      '--rm',                  // Instantly destroy the container after execution
+      '-i',                    // Interactive mode (keeps stdin open)
+      '--network', 'none',     // 🚫 STRIKE 1: No network access
+      '-m', '256m',            // 🛑 STRIKE 2: 256 MB RAM limit
+      '--memory-swap', '256m', // 🛑 STRIKE 3: Disable swap to enforce hard memory limit
+      '--cpus', '1',           // Limit CPU usage to 1 core
+      '--pids-limit', '64',    // 🛡️ STRIKE 4: Prevent fork bombs (infinite processes)
+      '--cap-drop', 'ALL',     // 🛡️ STRIKE 5: Drop all root privileges inside container
+      'node:18-alpine',        // The lightweight execution image
+      'node', '-'              // The '-' tells Node.js to read the code from stdin
     ]);
 
     let output = '';
     let errorOutput = '';
-    const MAX_OUTPUT_SIZE = 1024 * 1024;
+    // Prevent malicious output spam (1MB limit)
+    const MAX_OUTPUT_SIZE = 1024 * 1024; 
 
-    // Capture standard output (console.logs)
+    // Capture standard output
     dockerProcess.stdout.on('data', (data) => {
       if (output.length < MAX_OUTPUT_SIZE) {
         output += data.toString();
@@ -40,7 +45,7 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
       }
     });
 
-    // Inject the user's code securely into the container
+    // Inject the user's code directly into the container's memory
     dockerProcess.stdin.write(code);
     dockerProcess.stdin.end();
 
@@ -54,13 +59,18 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
     dockerProcess.on('close', (exitCode) => {
       clearTimeout(timeout); // Clear the TLE timer
 
+      // Exit code 137 is Docker's standard signal for "Out Of Memory" (OOM Killed)
+      if (exitCode === 137) {
+        return reject(new Error('MEMORY_LIMIT_EXCEEDED'));
+      }
+
       if (exitCode !== 0) {
         // If exit code is not 0, the user's code threw an error
-        reject(new Error(errorOutput || 'RUNTIME_ERROR'));
-      } else {
-        // Execution successful! Return the trimmed output
-        resolve(output.trim());
-      }
+        return reject(new Error(errorOutput || 'RUNTIME_ERROR'));
+      } 
+      
+      // Execution successful! Return the trimmed output
+      resolve(output.trim());
     });
   });
 };
