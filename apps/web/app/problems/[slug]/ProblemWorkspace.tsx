@@ -141,11 +141,11 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
-                p: ({node, ...props}) => <p className="mb-4" {...props} />,
-                strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
-                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-1" {...props} />,
-                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-4 space-y-1" {...props} />,
-                code: ({node, inline, ...props}: any) => 
+                p: ({...props}) => <p className="mb-4" {...props} />,
+                strong: ({...props}) => <strong className="font-bold text-white" {...props} />,
+                ul: ({...props}) => <ul className="list-disc pl-5 mb-4 space-y-1" {...props} />,
+                ol: ({...props}) => <ol className="list-decimal pl-5 mb-4 space-y-1" {...props} />,
+                code: ({inline, ...props}: any) => 
                   inline ? (
                     <code className="px-1.5 py-0.5 bg-white/10 text-primary-cyan rounded font-mono text-sm" {...props} />
                   ) : (
@@ -188,7 +188,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               key={language} // <--- ADD THIS LINE!
               problemId={problem.id}
               language={language === "node" ? "javascript" : language}
-              defaultCode={defaultCodeMap[language]}
+              defaultCode={defaultCodeMap[language] || ""}
               onSubmit={handleSubmit}
               onRunSamples={() => setStatus("Sample running coming later.")}
             />
