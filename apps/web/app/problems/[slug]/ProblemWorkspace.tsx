@@ -16,7 +16,21 @@ interface ProblemWorkspaceProps {
   };
 }
 
+const SUPPORTED_LANGUAGES = [
+  { id: "node", name: "Node.js (18.x)" },
+  { id: "python", name: "Python (3.11)" },
+  { id: "cpp", name: "C++ (GCC 13)" },
+];
+
+const defaultCodeMap: Record<string, string> = {
+  node: "// Press Ctrl + Enter to submit\nfunction solution(a, b) {\n    return a * b;\n}\n",
+  python: "# Press Ctrl + Enter to submit\ndef solution(a, b):\n    return a * b\n",
+  cpp: "// Press Ctrl + Enter to submit\n#include <iostream>\n\nint main() {\n    int a, b;\n    std::cin >> a >> b;\n    std::cout << (a * b) << std::endl;\n    return 0;\n}\n",
+};
+
 export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
+  // Add language state
+  const [language, setLanguage] = useState<string>("node");
   const [status, setStatus] = useState<string>("Ready to solve.");
   const [verdictCode, setVerdictCode] = useState<"IDLE" | "PENDING" | "ACCEPTED" | "REJECTED">("IDLE");
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
@@ -32,7 +46,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
         body: JSON.stringify({
           problemId: problem.id,
           code,
-          language: "node", 
+          language, 
         }),
       });
 
@@ -53,7 +67,6 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
   };
 
   const startPolling = (submissionId: string) => {
-    // Clear any existing intervals just in case
     if (pollInterval.current) clearInterval(pollInterval.current);
 
     pollInterval.current = setInterval(async () => {
@@ -68,7 +81,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             setStatus(`🏆 ACCEPTED in ${executionMs}ms!`);
             setVerdictCode("ACCEPTED");
             clearInterval(pollInterval.current!);
-          } else if (currentStatus === "WRONG_ANSWER" || currentStatus === "RUNTIME_ERROR" || currentStatus === "TIME_LIMIT_EXCEEDED") {
+          } else if (currentStatus === "WRONG_ANSWER" || currentStatus === "RUNTIME_ERROR" || currentStatus === "TIME_LIMIT_EXCEEDED" || currentStatus === "MEMORY_LIMIT_EXCEEDED") {
             setStatus(`❌ ${currentStatus.replace(/_/g, ' ')}`);
             setVerdictCode("REJECTED");
             clearInterval(pollInterval.current!);
@@ -77,7 +90,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
       } catch (err) {
         console.error("Polling error", err);
       }
-    }, 500); // Ping every 500ms
+    }, 500); 
   };
 
   const statusColors = {
@@ -103,6 +116,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
       </div>
 
       <div className="flex-grow flex gap-6 overflow-hidden min-h-0">
+        {/* Left Pane: Markdown Description */}
         <div className="w-1/3 h-full bg-[#121217] rounded-xl border border-white/10 p-6 overflow-y-auto shadow-clay-card flex flex-col custom-scrollbar">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <h2 className="text-2xl font-bold text-white">{problem.title}</h2>
@@ -144,15 +158,43 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
           </div>
         </div>
 
-        <div className="w-2/3 h-full relative group rounded-xl overflow-hidden border border-white/10 shadow-clay-card">
-          <CodeEditor
-            problemId={problem.id}
-            language="node"
-            defaultCode={`// Press Ctrl + Enter to submit\nfunction solution(inputs) {\n    // Write your logic here\n}\n`}
-            onSubmit={handleSubmit}
-            onRunSamples={() => setStatus("Sample running coming later.")}
-          />
+        {/* Right Pane: Editor with Language Toolbar */}
+        <div className="w-2/3 h-full flex flex-col bg-[#121217] rounded-xl overflow-hidden border border-white/10 shadow-clay-card">
+          
+          {/* 4. Language Selector Toolbar */}
+          <div className="h-12 border-b border-white/10 bg-white/5 flex items-center px-4 justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-400">Language:</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="bg-black/50 border border-white/10 text-primary-cyan text-sm rounded-md px-3 py-1 outline-none focus:border-primary-cyan/50 focus:ring-1 focus:ring-primary-cyan transition-all cursor-pointer"
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="text-xs text-gray-500 font-mono">
+              Submit: Ctrl + Enter
+            </div>
+          </div>
+
+          {/* Monaco Editor Container */}
+          <div className="flex-grow relative">
+            <CodeEditor
+              key={language} // <--- ADD THIS LINE!
+              problemId={problem.id}
+              language={language === "node" ? "javascript" : language}
+              defaultCode={defaultCodeMap[language]}
+              onSubmit={handleSubmit}
+              onRunSamples={() => setStatus("Sample running coming later.")}
+            />
+          </div>
         </div>
+
       </div>
     </div>
   );
