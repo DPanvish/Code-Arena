@@ -169,8 +169,15 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'POST' && req.url === '/trace') {
     let body = '';
+    const MAX_BODY_BYTES = 1_000_000; // e.g. 1MB
+
     req.on('data', chunk => {
       body += chunk.toString();
+      if (body.length > MAX_BODY_BYTES) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large' }));
+        req.destroy();
+      }
     });
     
     req.on('end', async () => {

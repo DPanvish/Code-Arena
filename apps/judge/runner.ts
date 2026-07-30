@@ -81,7 +81,7 @@ export const traceCode = (code: string, language: string): Promise<any[]> => {
     runnerProcess.stdin.end();
 
     const timeout = setTimeout(() => {
-      runnerProcess.kill();
+      runnerProcess.kill('SIGKILL');
       reject(new Error('TIME_LIMIT_EXCEEDED'));
     }, 5000); // 5 seconds for tracing since it's slower
 
@@ -105,4 +105,4 @@ export const traceCode = (code: string, language: string): Promise<any[]> => {
         reject(new Error(`Failed to start tracer: ${err.message}`));
     });
   });
-};
+};
