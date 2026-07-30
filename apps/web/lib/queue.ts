@@ -1,25 +1,19 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
-// Establish the Redis connection
-const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
-  maxRetriesPerRequest: null, // Required by BullMQ
+// Use the EXACT same URL you used in your Judge Worker
+const UPSTASH_URL = ;
+
+// Use the EXACT same connection settings
+const connection = new IORedis(UPSTASH_URL, {
+  maxRetriesPerRequest: null,
+  tls: { rejectUnauthorized: false },
+  pingInterval: 10000,
+  keepAlive: 10000,
+  enableReadyCheck: false,
+  family: 0,
 });
 
-connection.on("error", (err) => {
-  console.error("Redis connection error:", err.message);
-});
-
-// Instantiate the Submission Queue
 export const submissionQueue = new Queue("submissions", { 
-  connection: connection as any,
-  defaultJobOptions: {
-    removeOnComplete: true, // Keep Redis memory clean
-    removeOnFail: false,    // Keep failed jobs for debugging
-    attempts: 3,            // Retry temporary execution failures
-    backoff: {
-      type: 'exponential',
-      delay: 1000,
-    },
-  }
+  connection: connection as any 
 });

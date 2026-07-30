@@ -6,7 +6,7 @@ import { runCodeInDocker } from './runner';
 
 console.log("🚀 Judge Worker booting up...");
 
-const connection = new IORedis(process.env.REDIS_URL  , {
+const connection = new IORedis("redis://default:gQAAAAAAAqkzAAIgcDI0MGM1ZTkwM2E0YTI0ZjBmOGQ5ZWM4NjA0NjYzNDIxMA@magical-parrot-174387.upstash.io:6379" , {
   maxRetriesPerRequest: null,
   
   // Force TLS for secure Upstash connection
