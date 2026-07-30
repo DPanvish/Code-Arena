@@ -20,8 +20,8 @@ CodeArena is a Next.js, Fastify, and Python-based competitive programming platfo
 - **Config Files**: `next.config.js`, `postcss.config.mjs`, `eslint.config.js`, `tsconfig.json`.
 
 ### 2. `apps/judge` (Execution Service)
-- **`index.ts`**: Entry point for the judge worker/API.
-- **`runner.ts`**: Logic for sandboxed code execution (using Node/Python).
+- **`index.ts`**: Entry point for the judge worker (BullMQ) and the native HTTP API server (port 3001 for `/trace` requests).
+- **`runner.ts`**: Logic for sandboxed code execution and tracing (using Node/Python).
 - **`tracer.py`**: Python execution tracer that captures line-by-line snapshots (Phase 3 Visualizer Engine).
 - **`.env`, `package.json`**: Judge configurations.
 
