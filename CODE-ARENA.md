@@ -53,7 +53,7 @@ CodeArena is a Next.js, Fastify, and Python-based competitive programming platfo
 - Directory for shared TypeScript types (e.g., Zod schemas, API contracts).
 
 ## Root Level
-- **`.agent/skills/`**: Contains Antigravity skills used to guide the development and architecture of the project (e.g., api-design-principles, security-auditor, conductor-implement).
+- **`.agent/skills/`**: Contains Antigravity skills used to guide the development and architecture of the project (e.g., api-design-principles, security-auditor, typescript-pro, nextjs-app-router-patterns).
 - **`CodeArena_Roadmap.md`**: Detailed product roadmap, architecture, and phase planning.
 - **`turbo.json`, `pnpm-workspace.yaml`, `package.json`**: Monorepo orchestration configuration files.
 - **`infrastructure/`**: Terraform scripts (`main.tf`) for cloud infrastructure deployment.

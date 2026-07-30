@@ -10,8 +10,6 @@ if (!redisUrl) {
 const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   tls: { rejectUnauthorized: false },
-  pingInterval: 10000,
-  keepAlive: 10000,
   enableReadyCheck: false,
   family: 0,
 });
