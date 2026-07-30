@@ -2,7 +2,8 @@ import "dotenv/config";
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '@codearena/db';
-import { runCodeInDocker } from './runner';
+import { runCodeInDocker, traceCode } from './runner';
+import * as http from 'http';
 
 console.log("🚀 Judge Worker booting up...");
 
@@ -151,4 +152,61 @@ if __name__ == "__main__":
 
 worker.on('ready', () => {
   console.log("🎧 Polyglot Judge Worker listening for jobs on Redis...");
+});
+
+// --- HTTP Server for Synchronous Tracing ---
+const server = http.createServer(async (req, res) => {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/trace') {
+    let body = '';
+    const MAX_BODY_BYTES = 1_000_000; // e.g. 1MB
+
+    req.on('data', chunk => {
+      body += chunk.toString();
+      if (body.length > MAX_BODY_BYTES) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large' }));
+        req.destroy();
+      }
+    });
+    
+    req.on('end', async () => {
+      try {
+        const { code, language } = JSON.parse(body);
+        if (!code || !language) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing code or language' }));
+          return;
+        }
+
+        console.log(`\n🔍 Tracing ${language} execution...`);
+        const snapshots = await traceCode(code, language);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ snapshots }));
+      } catch (error: any) {
+        console.error('Tracing error:', error.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+    });
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`📡 Judge API Server running on port ${PORT}`);
 });

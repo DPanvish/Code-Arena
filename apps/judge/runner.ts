@@ -1,5 +1,6 @@
 // apps/judge/runner.ts
 import { spawn } from 'child_process';
+import * as path from 'path';
 
 const RUNTIMES: Record<string, { cmd: string; args: string[] }> = {
   node: { cmd: 'node', args: ['-'] },
@@ -52,6 +53,56 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
     runnerProcess.on('error', (err) => {
         clearTimeout(timeout);
         reject(new Error(`Failed to start process: ${err.message}. Do you have ${runtime.cmd} installed?`));
+    });
+  });
+};
+
+export const traceCode = (code: string, language: string): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    if (language.toLowerCase() !== 'python') {
+      return reject(new Error('Tracing currently only supported for Python.'));
+    }
+
+    const tracerPath = path.join(__dirname, 'tracer.py');
+    const runnerProcess = spawn('python', [tracerPath]);
+
+    let output = '';
+    let errorOutput = '';
+
+    runnerProcess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    runnerProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    runnerProcess.stdin.write(code);
+    runnerProcess.stdin.end();
+
+    const timeout = setTimeout(() => {
+      runnerProcess.kill('SIGKILL');
+      reject(new Error('TIME_LIMIT_EXCEEDED'));
+    }, 5000); // 5 seconds for tracing since it's slower
+
+    runnerProcess.on('close', (exitCode) => {
+      clearTimeout(timeout); 
+
+      if (exitCode !== 0) {
+        return reject(new Error(errorOutput || 'RUNTIME_ERROR'));
+      } 
+      
+      try {
+        const snapshots = JSON.parse(output.trim());
+        resolve(snapshots);
+      } catch (e) {
+        reject(new Error('Failed to parse tracer output'));
+      }
+    });
+    
+    runnerProcess.on('error', (err) => {
+        clearTimeout(timeout);
+        reject(new Error(`Failed to start tracer: ${err.message}`));
     });
   });
 };

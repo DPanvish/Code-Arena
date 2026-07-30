@@ -1,11 +1,13 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
-// Use the EXACT same URL you used in your Judge Worker
-const UPSTASH_URL = ;
+const redisUrl = process.env.REDIS_URL;
 
-// Use the EXACT same connection settings
-const connection = new IORedis(UPSTASH_URL, {
+if (!redisUrl) {
+  throw new Error("REDIS_URL is not set");
+}
+
+const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   tls: { rejectUnauthorized: false },
   pingInterval: 10000,
