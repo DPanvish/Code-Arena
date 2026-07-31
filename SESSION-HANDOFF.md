@@ -9,7 +9,8 @@
   - Integrated the Python tracer into the Judge service (`apps/judge/runner.ts`) and exposed it via a lightweight native HTTP server in `apps/judge/index.ts` (listening on port 3001, `POST /trace`). This allows the frontend to request synchronous code traces.
 - **Skills Installation**: Successfully installed 16 Antigravity skills (including architecture design, code review, security, TS/React modernization, and Next.js App Router patterns) to the `.agent/skills/` directory to enforce best practices moving forward.
 
+- **Visualizer UI**: Built the React frontend components (`VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`) in `apps/web/components/` and strict TypeScript schemas (`types/tracer.ts`) applying our modernization and App Router skills.
+
 ## Next Steps
-- Move to the frontend (`apps/web`) to start building the **Visualizer Panel**.
-- Create the React components for the code editor (Monaco), the Variable Watch panel, and the Call Stack panel.
-- Wire up the frontend to send code to the new Judge `/trace` endpoint and step through the returned JSON snapshots.
+- Wire up the frontend `ProblemWorkspace.tsx` to send code to the new Judge `/trace` endpoint.
+- Enhance the `CodeEditor.tsx` (Monaco) to visually highlight the current executing line based on `onLineChange`.
