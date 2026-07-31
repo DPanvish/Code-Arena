@@ -14,9 +14,9 @@ CodeArena is a Next.js, Fastify, and Python-based competitive programming platfo
   - **`login/`, `register/`**: Authentication pages.
   - **`problems/`**: Problem list and solving workspace (`ProblemWorkspace.tsx`).
   - **`sandbox/`**: Code sandbox testing environment.
-- **`components/`**: Reusable frontend components (`CodeEditor.tsx`, `Navbar.tsx`, `AuthProvider.tsx`, `Logo.tsx`).
+- **`components/`**: Reusable frontend components (`CodeEditor.tsx`, `Navbar.tsx`, `AuthProvider.tsx`, `Logo.tsx`, `VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`).
 - **`lib/`**: Frontend utility functions (`auth.ts`, `queue.ts`).
-- **`types/`**: TypeScript declarations (`next-auth.d.ts`).
+- **`types/`**: TypeScript declarations (`next-auth.d.ts`, `tracer.ts`).
 - **Config Files**: `next.config.js`, `postcss.config.mjs`, `eslint.config.js`, `tsconfig.json`.
 
 ### 2. `apps/judge` (Execution Service)

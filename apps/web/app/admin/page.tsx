@@ -40,7 +40,14 @@ export default async function AdminDashboard() {
                 </td>
               </tr>
             ) : (
-              problems.map((problem) => (
+              problems.map((problem: {
+                id: string;
+                title: string;
+                slug: string;
+                difficulty: string;
+                tags: string[];
+                createdAt: Date;
+              }) => (
                 <tr key={problem.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-bold text-gray-200">{problem.title}</div>
