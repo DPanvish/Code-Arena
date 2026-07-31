@@ -41,7 +41,13 @@ export default async function ProblemExplorer() {
                   </td>
                 </tr>
               ) : (
-                problems.map((problem) => (
+                problems.map((problem: {
+                  id: string;
+                  title: string;
+                  slug: string;
+                  difficulty: string;
+                  tags: string[];
+                }) => (
                   <tr key={problem.id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="px-6 py-4">
                       {/* TODO: We will wire up actual user completion status later */}
