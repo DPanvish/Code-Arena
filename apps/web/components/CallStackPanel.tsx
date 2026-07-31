@@ -1,4 +1,4 @@
-import { StackFrame } from "../../types/tracer";
+import { StackFrame } from "../types/tracer";
 
 interface CallStackPanelProps {
   stack: StackFrame[];

@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeEditor from "../../../components/CodeEditor";
+import VisualizerPanel from "../../../components/VisualizerPanel";
+import { TraceSnapshot } from "../../../types/tracer";
 
 interface ProblemWorkspaceProps {
   problem: {
@@ -33,6 +35,9 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
   const [language, setLanguage] = useState<string>("node");
   const [status, setStatus] = useState<string>("Ready to solve.");
   const [verdictCode, setVerdictCode] = useState<"IDLE" | "PENDING" | "ACCEPTED" | "REJECTED">("IDLE");
+  const [isVisualizerMode, setIsVisualizerMode] = useState(false);
+  const [traceSnapshots, setTraceSnapshots] = useState<TraceSnapshot[]>([]);
+  const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
 
   const handleSubmit = async (code: string) => {
@@ -62,6 +67,43 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
     } catch (error) {
       console.error("Submission failed:", error);
       setStatus("Failed to connect to the Judge API.");
+      setVerdictCode("REJECTED");
+    }
+  };
+
+  const handleTrace = async () => {
+    // get current code from localstorage or use default
+    const currentCode = localStorage.getItem(`codearena-${problem.id}-${language}`) || defaultCodeMap[language] || "";
+    setStatus("Tracing execution...");
+    setVerdictCode("PENDING");
+    setIsVisualizerMode(true);
+    setTraceSnapshots([]);
+    setHighlightedLine(null);
+
+    try {
+      const res = await fetch("/api/submissions/trace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: problem.id,
+          code: currentCode,
+          language, 
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (res.ok && data.snapshots) {
+        setStatus(`Trace complete.`);
+        setVerdictCode("ACCEPTED");
+        setTraceSnapshots(data.snapshots);
+      } else {
+        setStatus(`Trace Error: ${data.error || "Failed"}`);
+        setVerdictCode("REJECTED");
+      }
+    } catch (error) {
+      console.error("Trace failed:", error);
+      setStatus("Failed to trace code.");
       setVerdictCode("REJECTED");
     }
   };
@@ -116,10 +158,24 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
       </div>
 
       <div className="flex-grow flex gap-6 overflow-hidden min-h-0">
-        {/* Left Pane: Markdown Description */}
-        <div className="w-1/3 h-full bg-[#121217] rounded-xl border border-white/10 p-6 overflow-y-auto shadow-clay-card flex flex-col custom-scrollbar">
+        {/* Left Pane: Markdown Description OR Visualizer */}
+        <div className={`transition-all duration-300 h-full bg-[#121217] rounded-xl border border-white/10 p-6 overflow-y-auto shadow-clay-card flex flex-col custom-scrollbar ${isVisualizerMode ? 'w-1/2' : 'w-1/3'}`}>
           <div className="flex items-center justify-between mb-4 shrink-0">
-            <h2 className="text-2xl font-bold text-white">{problem.title}</h2>
+             <div className="flex gap-4 items-center">
+               <button 
+                 onClick={() => setIsVisualizerMode(false)}
+                 className={`text-xl font-bold transition-colors ${!isVisualizerMode ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+               >
+                 Description
+               </button>
+               <button 
+                 onClick={() => setIsVisualizerMode(true)}
+                 className={`text-xl font-bold flex items-center gap-2 transition-colors ${isVisualizerMode ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+               >
+                 Visualizer
+                 {isVisualizerMode && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span></span>}
+               </button>
+             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider ${
               problem.difficulty === 'EASY' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
               problem.difficulty === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
@@ -129,15 +185,17 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             </span>
           </div>
           
-          <div className="flex flex-wrap gap-2 mb-6 border-b border-white/5 pb-6 shrink-0">
-            {problem.tags?.map((tag: string) => (
-              <span key={tag} className="px-2 py-1 bg-white/5 text-gray-400 text-xs rounded-md">
-                {tag}
-              </span>
-            ))}
-          </div>
+          {!isVisualizerMode ? (
+            <>
+              <div className="flex flex-wrap gap-2 mb-6 border-b border-white/5 pb-6 shrink-0">
+                {problem.tags?.map((tag: string) => (
+                  <span key={tag} className="px-2 py-1 bg-white/5 text-gray-400 text-xs rounded-md">
+                    {tag}
+                  </span>
+                ))}
+              </div>
 
-          <div className="text-gray-300 leading-relaxed font-sans pt-2">
+              <div className="text-gray-300 leading-relaxed font-sans pt-2">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
@@ -156,10 +214,17 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               {problem.description || "No description provided."}
             </ReactMarkdown>
           </div>
+          </>
+          ) : (
+            <VisualizerPanel 
+               snapshots={traceSnapshots} 
+               onLineChange={(line) => setHighlightedLine(line)} 
+            />
+          )}
         </div>
 
         {/* Right Pane: Editor with Language Toolbar */}
-        <div className="w-2/3 h-full flex flex-col bg-[#121217] rounded-xl overflow-hidden border border-white/10 shadow-clay-card">
+        <div className={`transition-all duration-300 h-full flex flex-col bg-[#121217] rounded-xl overflow-hidden border border-white/10 shadow-clay-card ${isVisualizerMode ? 'w-1/2' : 'w-2/3'}`}>
           
           {/* 4. Language Selector Toolbar */}
           <div className="h-12 border-b border-white/10 bg-white/5 flex items-center px-4 justify-between shrink-0">
@@ -177,8 +242,18 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
                 ))}
               </select>
             </div>
-            <div className="text-xs text-gray-500 font-mono">
-              Submit: Ctrl + Enter
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={handleTrace}
+                disabled={language !== "python"}
+                className="px-4 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title={language !== "python" ? "Tracing is currently only supported for Python" : "Trace execution line-by-line"}
+              >
+                Debug / Trace
+              </button>
+              <div className="text-xs text-gray-500 font-mono">
+                Submit: Ctrl + Enter
+              </div>
             </div>
           </div>
 
@@ -191,6 +266,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               defaultCode={defaultCodeMap[language] || ""}
               onSubmit={handleSubmit}
               onRunSamples={() => setStatus("Sample running coming later.")}
+              highlightedLine={isVisualizerMode ? highlightedLine : null}
             />
           </div>
         </div>

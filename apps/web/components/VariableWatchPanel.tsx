@@ -1,11 +1,11 @@
-import { VariableState } from "../../types/tracer";
+import { VariableState } from "../types/tracer";
 
 interface VariableWatchPanelProps {
   variables: Record<string, VariableState>;
 }
 
 export default function VariableWatchPanel({ variables }: VariableWatchPanelProps) {
-  const variableNames = Object.keys(variables);
+  const variableEntries = Object.entries(variables);
 
   return (
     <div className="bg-[#121217] rounded-xl border border-white/10 shadow-clay-card flex flex-col h-full overflow-hidden">
@@ -16,7 +16,7 @@ export default function VariableWatchPanel({ variables }: VariableWatchPanelProp
         </h3>
       </div>
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-        {variableNames.length === 0 ? (
+        {variableEntries.length === 0 ? (
           <div className="text-gray-500 text-sm italic text-center mt-4">
             No local variables in scope.
           </div>
@@ -30,11 +30,11 @@ export default function VariableWatchPanel({ variables }: VariableWatchPanelProp
               </tr>
             </thead>
             <tbody>
-              {variableNames.map((name) => (
+              {variableEntries.map(([name, variable]) => (
                 <tr key={name} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="py-2 text-primary-cyan font-mono">{name}</td>
-                  <td className="py-2 text-yellow-400 font-mono text-xs">{variables[name].type}</td>
-                  <td className="py-2 text-green-400 font-mono">{variables[name].value}</td>
+                  <td className="py-2 text-yellow-400 font-mono text-xs">{variable.type}</td>
+                  <td className="py-2 text-green-400 font-mono">{variable.value}</td>
                 </tr>
               ))}
             </tbody>

@@ -9,19 +9,23 @@ interface CodeEditorProps {
   defaultCode: string;
   onSubmit: (code: string) => void;
   onRunSamples?: () => void;
+  highlightedLine?: number | null;
 }
 
-export default function CodeEditor({ 
-  problemId, 
-  language, 
-  defaultCode, 
-  onSubmit, 
-  onRunSamples 
-}: CodeEditorProps) {
+export default function CodeEditor(props: CodeEditorProps) {
+  const { 
+    problemId, 
+    language, 
+    defaultCode, 
+    onSubmit, 
+    onRunSamples 
+  } = props;
   
   const storageKey = `codearena-${problemId}-${language}`;
   const [code, setCode] = useState<string>("");
   const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
+  const decorationsRef = useRef<any>(null);
 
   useEffect(() => {
     const cachedCode = localStorage.getItem(storageKey);
@@ -40,6 +44,8 @@ export default function CodeEditor({
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
+    decorationsRef.current = editor.createDecorationsCollection([]);
 
     // Ctrl/Cmd + Enter -> Submit Code
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
@@ -55,6 +61,22 @@ export default function CodeEditor({
       }
     });
   };
+
+  useEffect(() => {
+    if (decorationsRef.current && monacoRef.current) {
+      if (props.highlightedLine) {
+        decorationsRef.current.set([{
+          range: new monacoRef.current.Range(props.highlightedLine, 1, props.highlightedLine, 1),
+          options: {
+            isWholeLine: true,
+            className: 'bg-indigo-500/30',
+          }
+        }]);
+      } else {
+        decorationsRef.current.set([]);
+      }
+    }
+  }, [props.highlightedLine]);
 
   return (
     <div className="w-full h-full absolute inset-0">

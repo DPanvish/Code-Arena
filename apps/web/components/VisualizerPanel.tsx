@@ -79,12 +79,12 @@ export default function VisualizerPanel({ snapshots, onLineChange }: VisualizerP
       </div>
 
       {/* Panels */}
-      <div className="flex gap-4 min-h-0 flex-1">
-        <div className="w-2/3 h-full">
-          <VariableWatchPanel variables={snapshot.variables || {}} />
+      <div className="flex flex-col gap-4 min-h-0 flex-1">
+        <div className="w-full h-1/2">
+          <VariableWatchPanel variables={snapshot?.variables || {}} />
         </div>
-        <div className="w-1/3 h-full">
-          <CallStackPanel stack={snapshot.stack || []} />
+        <div className="w-full h-1/2">
+          <CallStackPanel stack={snapshot?.stack || []} />
         </div>
       </div>
     </div>
