@@ -1,8 +1,10 @@
 const inspector = require('inspector');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const code = fs.readFileSync(0, 'utf-8');
 const snapshots = [];
+const scriptFileName = `arena_script_${crypto.randomUUID()}.js`;
 
 const session = new inspector.Session();
 session.connect();
@@ -20,7 +22,7 @@ session.post('Debugger.enable', () => {
 
         const topFrame = callFrames[0];
         // Only trace our script
-        if (!topFrame.url.includes('arena_script.js')) {
+        if (!topFrame.url.includes(scriptFileName)) {
           session.post('Debugger.stepInto');
           return;
         }
@@ -85,7 +87,7 @@ session.post('Debugger.enable', () => {
         }
         
         // Extract call stack
-        const stack = callFrames.filter(f => f.url.includes('arena_script.js')).map(f => ({
+        const stack = callFrames.filter(f => f.url.includes(scriptFileName)).map(f => ({
           function: f.functionName || '<anonymous>',
           line: f.location.lineNumber + 1
         }));
@@ -105,7 +107,8 @@ session.post('Debugger.enable', () => {
 
     // Write code to a temp file and require it to start execution
     const path = require('path');
-    const tempFile = path.resolve('./arena_script.js');
+    const os = require('os');
+    const tempFile = path.join(os.tmpdir(), scriptFileName);
     fs.writeFileSync(tempFile, code);
     
     // We break on the first line
@@ -117,7 +120,7 @@ session.post('Debugger.enable', () => {
         require(tempFile);
       } catch (e) {
         // Find line number from stack
-        const match = e.stack.match(/arena_script\.js:(\d+)/);
+        const match = e.stack.match(new RegExp(`${scriptFileName.replace('.', '\\.')}:(\\d+)`));
         const errLine = match ? parseInt(match[1]) : null;
         snapshots.push({
           error: e.message,
