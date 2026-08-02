@@ -78,9 +78,16 @@ if __name__ == "__main__":
             compiled_code = compile(code, user_script_path, 'exec')
             exec(compiled_code, {"__name__": "__main__", "__file__": user_script_path})
         except Exception as e:
+            import traceback
+            tb = sys.exc_info()[2]
+            err_line = None
+            for frame_summary in traceback.extract_tb(tb):
+                if frame_summary.filename == user_script_path:
+                    err_line = frame_summary.lineno
             snapshots.append({
                 "error": str(e),
-                "type": type(e).__name__
+                "type": type(e).__name__,
+                "line": err_line
             })
         finally:
             sys.settrace(None)

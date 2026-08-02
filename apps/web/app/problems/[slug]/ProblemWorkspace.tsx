@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeEditor from "../../../components/CodeEditor";
@@ -37,9 +37,18 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
   const [verdictCode, setVerdictCode] = useState<"IDLE" | "PENDING" | "ACCEPTED" | "REJECTED">("IDLE");
   const [isVisualizerMode, setIsVisualizerMode] = useState(false);
   const [isDiffMode, setIsDiffMode] = useState(false);
+  const [errorPin, setErrorPin] = useState<{ line: number, message: string } | null>(null);
   const [traceSnapshots, setTraceSnapshots] = useState<TraceSnapshot[]>([]);
   const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const handleLineChange = useCallback((line: number | null) => {
+    setHighlightedLine(line);
+  }, []);
+
+  const handleErrorPin = useCallback((err: { line: number, message: string } | null) => {
+    setErrorPin(err);
+  }, []);
 
   const handleSubmit = async (code: string) => {
     setStatus("Transmitting to Judge Worker...");
@@ -80,6 +89,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
     setIsVisualizerMode(true);
     setTraceSnapshots([]);
     setHighlightedLine(null);
+    setErrorPin(null);
 
     try {
       const res = await fetch("/api/submissions/trace", {
@@ -219,7 +229,8 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
           ) : (
             <VisualizerPanel 
                snapshots={traceSnapshots} 
-               onLineChange={(line) => setHighlightedLine(line)} 
+               onLineChange={handleLineChange} 
+               onErrorPin={handleErrorPin}
             />
           )}
         </div>
@@ -253,9 +264,9 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               </button>
               <button 
                 onClick={handleTrace}
-                disabled={language !== "python"}
+                disabled={language !== "python" && language !== "javascript" && language !== "node"}
                 className="px-4 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                title={language !== "python" ? "Tracing is currently only supported for Python" : "Trace execution line-by-line"}
+                title={language !== "python" && language !== "javascript" && language !== "node" ? "Tracing is currently only supported for Python and JS" : "Trace execution line-by-line"}
               >
                 Debug / Trace
               </button>
@@ -277,6 +288,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               highlightedLine={isVisualizerMode ? highlightedLine : null}
               isDiffMode={isDiffMode}
               diffOriginalCode={defaultCodeMap[language] || ""}
+              errorPin={errorPin}
             />
           </div>
         </div>

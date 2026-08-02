@@ -13,4 +13,5 @@ export interface TraceSnapshot {
   variables: Record<string, VariableState>;
   stack: StackFrame[];
   error?: string;
+  type?: string;
 }
