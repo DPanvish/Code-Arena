@@ -36,6 +36,7 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
   const [status, setStatus] = useState<string>("Ready to solve.");
   const [verdictCode, setVerdictCode] = useState<"IDLE" | "PENDING" | "ACCEPTED" | "REJECTED">("IDLE");
   const [isVisualizerMode, setIsVisualizerMode] = useState(false);
+  const [isDiffMode, setIsDiffMode] = useState(false);
   const [traceSnapshots, setTraceSnapshots] = useState<TraceSnapshot[]>([]);
   const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
@@ -244,6 +245,13 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             </div>
             <div className="flex items-center gap-4">
               <button 
+                onClick={() => setIsDiffMode(!isDiffMode)}
+                className={`px-4 py-1 rounded-lg border text-sm font-bold transition ${isDiffMode ? 'bg-orange-500/20 border-orange-500/50 text-orange-400' : 'bg-orange-500/5 border-orange-500/20 text-orange-500 hover:bg-orange-500/10'}`}
+                title="Compare your code against the original template"
+              >
+                Diff Mode
+              </button>
+              <button 
                 onClick={handleTrace}
                 disabled={language !== "python"}
                 className="px-4 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -267,6 +275,8 @@ export default function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
               onSubmit={handleSubmit}
               onRunSamples={() => setStatus("Sample running coming later.")}
               highlightedLine={isVisualizerMode ? highlightedLine : null}
+              isDiffMode={isDiffMode}
+              diffOriginalCode={defaultCodeMap[language] || ""}
             />
           </div>
         </div>

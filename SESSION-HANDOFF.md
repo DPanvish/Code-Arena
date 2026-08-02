@@ -9,8 +9,11 @@
   - Integrated the Python tracer into the Judge service (`apps/judge/runner.ts`) and exposed it via a lightweight native HTTP server in `apps/judge/index.ts` (listening on port 3001, `POST /trace`). This allows the frontend to request synchronous code traces.
 - **Skills Installation**: Successfully installed 16 Antigravity skills (including architecture design, code review, security, TS/React modernization, and Next.js App Router patterns) to the `.agent/skills/` directory to enforce best practices moving forward.
 
-- **Visualizer UI**: Built the React frontend components (`VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`) in `apps/web/components/` and strict TypeScript schemas (`types/tracer.ts`) applying our modernization and App Router skills.
+- **Visualizer UI**: Built the React frontend components (`VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`, `DataStructureCanvas.tsx`) in `apps/web/components/` and strict TypeScript schemas (`types/tracer.ts`) applying our modernization and App Router skills.
+- **Diff Mode**: Upgraded `CodeEditor.tsx` to support `@monaco-editor/react`'s `<DiffEditor>`, allowing side-by-side template divergence comparison.
+- **Phase 3 is now fully complete!**
 
 ## Next Steps
-- Wire up the frontend `ProblemWorkspace.tsx` to send code to the new Judge `/trace` endpoint.
-- Enhance the `CodeEditor.tsx` (Monaco) to visually highlight the current executing line based on `onLineChange`.
+- Move on to **Phase 4 (Social & Leaderboards)**:
+  - Create user profiles and activity feeds.
+  - Implement leaderboards for tracking rankings.

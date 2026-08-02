@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Editor, { useMonaco } from "@monaco-editor/react";
+import Editor, { DiffEditor, useMonaco } from "@monaco-editor/react";
 
 interface CodeEditorProps {
   problemId: string;
@@ -10,6 +10,8 @@ interface CodeEditorProps {
   onSubmit: (code: string) => void;
   onRunSamples?: () => void;
   highlightedLine?: number | null;
+  isDiffMode?: boolean;
+  diffOriginalCode?: string;
 }
 
 export default function CodeEditor(props: CodeEditorProps) {
@@ -18,7 +20,9 @@ export default function CodeEditor(props: CodeEditorProps) {
     language, 
     defaultCode, 
     onSubmit, 
-    onRunSamples 
+    onRunSamples,
+    isDiffMode,
+    diffOriginalCode 
   } = props;
   
   const storageKey = `codearena-${problemId}-${language}`;
@@ -78,26 +82,40 @@ export default function CodeEditor(props: CodeEditorProps) {
     }
   }, [props.highlightedLine]);
 
+  const commonOptions = {
+    minimap: { enabled: false },
+    fontSize: 15,
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    padding: { top: 24, bottom: 24 },
+    scrollBeyondLastLine: false,
+    smoothScrolling: true,
+    cursorBlinking: "smooth",
+    contextmenu: false, 
+  };
+
   return (
     <div className="w-full h-full absolute inset-0">
-      <Editor
-        height="100%"
-        language={language}
-        theme="vs-dark" 
-        value={code}
-        onChange={handleEditorChange}
-        onMount={handleEditorDidMount}
-        options={{
-          minimap: { enabled: false },
-          fontSize: 15,
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          padding: { top: 24, bottom: 24 },
-          scrollBeyondLastLine: false,
-          smoothScrolling: true,
-          cursorBlinking: "smooth",
-          contextmenu: false, 
-        }}
-      />
+      {isDiffMode ? (
+        <DiffEditor
+          height="100%"
+          language={language}
+          theme="vs-dark"
+          original={diffOriginalCode || ""}
+          modified={code}
+          onMount={handleEditorDidMount}
+          options={commonOptions as any}
+        />
+      ) : (
+        <Editor
+          height="100%"
+          language={language}
+          theme="vs-dark" 
+          value={code}
+          onChange={handleEditorChange}
+          onMount={handleEditorDidMount}
+          options={commonOptions as any}
+        />
+      )}
     </div>
   );
 }
