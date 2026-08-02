@@ -12,6 +12,7 @@ interface CodeEditorProps {
   highlightedLine?: number | null;
   isDiffMode?: boolean;
   diffOriginalCode?: string;
+  errorPin?: { line: number, message: string } | null;
 }
 
 export default function CodeEditor(props: CodeEditorProps) {
@@ -22,7 +23,8 @@ export default function CodeEditor(props: CodeEditorProps) {
     onSubmit, 
     onRunSamples,
     isDiffMode,
-    diffOriginalCode 
+    diffOriginalCode,
+    errorPin
   } = props;
   
   const storageKey = `codearena-${problemId}-${language}`;
@@ -30,6 +32,7 @@ export default function CodeEditor(props: CodeEditorProps) {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const decorationsRef = useRef<any>(null);
+  const errorDecorationsRef = useRef<any>(null);
 
   useEffect(() => {
     const cachedCode = localStorage.getItem(storageKey);
@@ -52,6 +55,9 @@ export default function CodeEditor(props: CodeEditorProps) {
     
     const decorationsCol = targetEditor.createDecorationsCollection([]);
     decorationsRef.current = decorationsCol;
+    
+    const errorDecorationsCol = targetEditor.createDecorationsCollection([]);
+    errorDecorationsRef.current = errorDecorationsCol;
 
     // Apply current highlight immediately in case mode switched while tracing
     if (props.highlightedLine) {
@@ -60,6 +66,17 @@ export default function CodeEditor(props: CodeEditorProps) {
         options: {
           isWholeLine: true,
           className: 'bg-indigo-500/30',
+        }
+      }]);
+    }
+
+    if (props.errorPin) {
+      errorDecorationsCol.set([{
+        range: new monaco.Range(props.errorPin.line, 1, props.errorPin.line, 1),
+        options: {
+          isWholeLine: true,
+          className: 'bg-red-500/20 border-l-4 border-red-500',
+          hoverMessage: { value: `**🚨 Logical Error**: ${props.errorPin.message}` }
         }
       }]);
     }
@@ -107,6 +124,23 @@ export default function CodeEditor(props: CodeEditorProps) {
       }
     }
   }, [props.highlightedLine]);
+
+  useEffect(() => {
+    if (errorDecorationsRef.current && monacoRef.current) {
+      if (props.errorPin) {
+        errorDecorationsRef.current.set([{
+          range: new monacoRef.current.Range(props.errorPin.line, 1, props.errorPin.line, 1),
+          options: {
+            isWholeLine: true,
+            className: 'bg-red-500/20 border-l-4 border-red-500',
+            hoverMessage: { value: `**🚨 Logical Error**: ${props.errorPin.message}` }
+          }
+        }]);
+      } else {
+        errorDecorationsRef.current.set([]);
+      }
+    }
+  }, [props.errorPin]);
 
   const commonOptions = {
     minimap: { enabled: false },

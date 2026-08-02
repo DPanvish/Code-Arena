@@ -59,12 +59,19 @@ export const runCodeInDocker = (code: string, language: string): Promise<string>
 
 export const traceCode = (code: string, language: string): Promise<any[]> => {
   return new Promise((resolve, reject) => {
-    if (language.toLowerCase() !== 'python') {
-      return reject(new Error('Tracing currently only supported for Python.'));
+    const lang = language.toLowerCase();
+    if (lang !== 'python' && lang !== 'javascript' && lang !== 'node') {
+      return reject(new Error('Tracing currently only supported for Python and JavaScript.'));
     }
 
-    const tracerPath = path.join(__dirname, 'tracer.py');
-    const runnerProcess = spawn('python', [tracerPath]);
+    let runnerProcess;
+    if (lang === 'python') {
+        const tracerPath = path.join(__dirname, 'tracer.py');
+        runnerProcess = spawn('python', [tracerPath]);
+    } else {
+        const tracerPath = path.join(__dirname, 'js_tracer.js');
+        runnerProcess = spawn('node', [tracerPath]);
+    }
 
     let output = '';
     let errorOutput = '';

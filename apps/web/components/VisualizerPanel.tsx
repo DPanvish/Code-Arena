@@ -8,20 +8,29 @@ import DataStructureCanvas from "./DataStructureCanvas";
 
 interface VisualizerPanelProps {
   snapshots: TraceSnapshot[];
-  onLineChange?: (line: number) => void;
+  onLineChange?: (line: number | null) => void;
+  onErrorPin?: (error: { line: number, message: string } | null) => void;
 }
 
-export default function VisualizerPanel({ snapshots, onLineChange }: VisualizerPanelProps) {
+export default function VisualizerPanel({ snapshots, onLineChange, onErrorPin }: VisualizerPanelProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const snapshot = snapshots[currentStep];
 
   useEffect(() => {
-    if (snapshot && onLineChange) {
-      onLineChange(snapshot.line);
+    if (snapshot) {
+      if (snapshot.error && onErrorPin && snapshot.line) {
+        onErrorPin({ line: snapshot.line, message: `${snapshot.type || "Error"}: ${snapshot.error}` });
+      } else if (onErrorPin) {
+        onErrorPin(null);
+      }
+      
+      if (onLineChange) {
+        onLineChange(snapshot.line || null);
+      }
     }
-  }, [currentStep, snapshot, onLineChange]);
+  }, [currentStep, snapshot, onLineChange, onErrorPin]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;

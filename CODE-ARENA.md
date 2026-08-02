@@ -23,6 +23,7 @@ CodeArena is a Next.js, Fastify, and Python-based competitive programming platfo
 - **`index.ts`**: Entry point for the judge worker (BullMQ) and the native HTTP API server (port 3001 for `/trace` requests).
 - **`runner.ts`**: Logic for sandboxed code execution and tracing (using Node/Python).
 - **`tracer.py`**: Python execution tracer that captures line-by-line snapshots (Phase 3 Visualizer Engine).
+- **`js_tracer.js`**: Node.js execution tracer utilizing the V8 inspector module for JS visualizer integration.
 - **`.env`, `package.json`**: Judge configurations.
 
 ### 3. `apps/worker`

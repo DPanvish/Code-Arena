@@ -9,9 +9,11 @@
   - Integrated the Python tracer into the Judge service (`apps/judge/runner.ts`) and exposed it via a lightweight native HTTP server in `apps/judge/index.ts` (listening on port 3001, `POST /trace`). This allows the frontend to request synchronous code traces.
 - **Skills Installation**: Successfully installed 16 Antigravity skills (including architecture design, code review, security, TS/React modernization, and Next.js App Router patterns) to the `.agent/skills/` directory to enforce best practices moving forward.
 
-- **Visualizer UI**: Built the React frontend components (`VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`, `DataStructureCanvas.tsx`) in `apps/web/components/` and strict TypeScript schemas (`types/tracer.ts`) applying our modernization and App Router skills.
-- **Diff Mode**: Upgraded `CodeEditor.tsx` to support `@monaco-editor/react`'s `<DiffEditor>`, allowing side-by-side template divergence comparison.
-- **Phase 3 is now fully complete!**
+  - **Visualizer UI**: Built the React frontend components (`VisualizerPanel.tsx`, `VariableWatchPanel.tsx`, `CallStackPanel.tsx`, `DataStructureCanvas.tsx`) in `apps/web/components/` and strict TypeScript schemas (`types/tracer.ts`) applying our modernization and App Router skills.
+  - **Error Pin System**: Implemented exact crash line extraction in tracers, integrated via an `onErrorPin` callback, and utilized Monaco's decorations API to inject inline error overlays.
+  - **JavaScript Tracer**: Built `apps/judge/js_tracer.js` utilizing the Node.js `inspector` module (CDP) to provide line-by-line tracing capabilities identical to Python.
+  - **Diff Mode**: Upgraded `CodeEditor.tsx` to support `@monaco-editor/react`'s `<DiffEditor>`, allowing side-by-side template divergence comparison.
+  - **Phase 3 MVP Complete**: By user request, MVP is capped at Python and JS. C/C++, Java, and Redis Streaming are deferred to post-MVP roadmap.
 
 ## Next Steps
 - Move on to **Phase 4 (Social & Leaderboards)**:
