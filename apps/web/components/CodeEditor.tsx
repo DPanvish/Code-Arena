@@ -46,23 +46,49 @@ export default function CodeEditor(props: CodeEditorProps) {
     localStorage.setItem(storageKey, val);
   };
 
-  const handleEditorDidMount = (editor: any, monaco: any) => {
-    editorRef.current = editor;
+  const setupEditorBindings = (targetEditor: any, monaco: any) => {
+    editorRef.current = targetEditor;
     monacoRef.current = monaco;
-    decorationsRef.current = editor.createDecorationsCollection([]);
+    
+    const decorationsCol = targetEditor.createDecorationsCollection([]);
+    decorationsRef.current = decorationsCol;
+
+    // Apply current highlight immediately in case mode switched while tracing
+    if (props.highlightedLine) {
+      decorationsCol.set([{
+        range: new monaco.Range(props.highlightedLine, 1, props.highlightedLine, 1),
+        options: {
+          isWholeLine: true,
+          className: 'bg-indigo-500/30',
+        }
+      }]);
+    }
 
     // Ctrl/Cmd + Enter -> Submit Code
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      // We grab the value directly from the editor instance to prevent stale React closures
-      const currentCode = editor.getValue();
+    targetEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      const currentCode = targetEditor.getValue();
       onSubmit(currentCode);
     });
 
     // Ctrl/Cmd + Shift + R -> Run Sample Tests
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyR, () => {
+    targetEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyR, () => {
       if (onRunSamples) {
         onRunSamples();
       }
+    });
+  };
+
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    setupEditorBindings(editor, monaco);
+  };
+
+  const handleDiffEditorDidMount = (diffEditor: any, monaco: any) => {
+    const modifiedEditor = diffEditor.getModifiedEditor();
+    setupEditorBindings(modifiedEditor, monaco);
+    
+    // Subscribe to changes in diff mode
+    modifiedEditor.onDidChangeModelContent(() => {
+      handleEditorChange(modifiedEditor.getValue());
     });
   };
 
@@ -102,7 +128,7 @@ export default function CodeEditor(props: CodeEditorProps) {
           theme="vs-dark"
           original={diffOriginalCode || ""}
           modified={code}
-          onMount={handleEditorDidMount}
+          onMount={handleDiffEditorDidMount}
           options={commonOptions as any}
         />
       ) : (

@@ -16,7 +16,7 @@ export default function DataStructureCanvas({ variables }: DataStructureCanvasPr
     try {
       // Very naive python list string parser for MVP (assumes simple types like ints, strings)
       // e.g. "[1, 2, 3]"
-      const valStr = listVar[1].value.replace(/'/g, '"'); 
+      const valStr = listVar[1].value; 
       parsedArray = JSON.parse(valStr);
     } catch (e) {
       // Could not parse
@@ -36,9 +36,13 @@ export default function DataStructureCanvas({ variables }: DataStructureCanvasPr
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
         
-        {!parsedArray ? (
+        {parsedArray === null ? (
           <div className="text-gray-500 text-sm italic text-center relative z-10">
             No array structures in scope to visualize.
+          </div>
+        ) : parsedArray.length === 0 ? (
+          <div className="text-gray-400 text-sm font-mono text-center relative z-10 border border-white/10 border-dashed rounded-xl px-8 py-4 bg-black/20 shadow-lg">
+            [ ] (Empty Array)
           </div>
         ) : (
           <div className="flex flex-wrap gap-3 items-center justify-center relative z-10">
