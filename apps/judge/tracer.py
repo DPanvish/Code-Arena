@@ -20,9 +20,18 @@ def build_tracer(user_script_path, snapshots):
         for name, value in locals_dict.items():
             if not name.startswith('__'):
                 try:
+                    val_type = type(value).__name__
+                    if val_type == 'list':
+                        try:
+                            str_val = json.dumps(value)
+                        except Exception:
+                            str_val = repr(value)
+                    else:
+                        str_val = repr(value)
+                        
                     variables[name] = {
-                        "type": type(value).__name__,
-                        "value": repr(value)
+                        "type": val_type,
+                        "value": str_val
                     }
                 except Exception:
                     variables[name] = {

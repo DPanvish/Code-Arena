@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { TraceSnapshot } from "../types/tracer";
 import VariableWatchPanel from "./VariableWatchPanel";
 import CallStackPanel from "./CallStackPanel";
+import DataStructureCanvas from "./DataStructureCanvas";
 
 interface VisualizerPanelProps {
   snapshots: TraceSnapshot[];
@@ -79,11 +80,14 @@ export default function VisualizerPanel({ snapshots, onLineChange }: VisualizerP
       </div>
 
       {/* Panels */}
-      <div className="flex flex-col gap-4 min-h-0 flex-1">
-        <div className="w-full h-1/2">
+      <div className="flex flex-col gap-4 min-h-0 flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2">
+        <div className="w-full h-64 shrink-0">
+          <DataStructureCanvas variables={snapshot?.variables || {}} />
+        </div>
+        <div className="w-full h-48 shrink-0">
           <VariableWatchPanel variables={snapshot?.variables || {}} />
         </div>
-        <div className="w-full h-1/2">
+        <div className="w-full h-48 shrink-0">
           <CallStackPanel stack={snapshot?.stack || []} />
         </div>
       </div>

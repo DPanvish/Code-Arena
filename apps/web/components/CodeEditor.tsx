@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Editor, { useMonaco } from "@monaco-editor/react";
+import Editor, { DiffEditor, useMonaco } from "@monaco-editor/react";
 
 interface CodeEditorProps {
   problemId: string;
@@ -10,6 +10,8 @@ interface CodeEditorProps {
   onSubmit: (code: string) => void;
   onRunSamples?: () => void;
   highlightedLine?: number | null;
+  isDiffMode?: boolean;
+  diffOriginalCode?: string;
 }
 
 export default function CodeEditor(props: CodeEditorProps) {
@@ -18,7 +20,9 @@ export default function CodeEditor(props: CodeEditorProps) {
     language, 
     defaultCode, 
     onSubmit, 
-    onRunSamples 
+    onRunSamples,
+    isDiffMode,
+    diffOriginalCode 
   } = props;
   
   const storageKey = `codearena-${problemId}-${language}`;
@@ -42,23 +46,49 @@ export default function CodeEditor(props: CodeEditorProps) {
     localStorage.setItem(storageKey, val);
   };
 
-  const handleEditorDidMount = (editor: any, monaco: any) => {
-    editorRef.current = editor;
+  const setupEditorBindings = (targetEditor: any, monaco: any) => {
+    editorRef.current = targetEditor;
     monacoRef.current = monaco;
-    decorationsRef.current = editor.createDecorationsCollection([]);
+    
+    const decorationsCol = targetEditor.createDecorationsCollection([]);
+    decorationsRef.current = decorationsCol;
+
+    // Apply current highlight immediately in case mode switched while tracing
+    if (props.highlightedLine) {
+      decorationsCol.set([{
+        range: new monaco.Range(props.highlightedLine, 1, props.highlightedLine, 1),
+        options: {
+          isWholeLine: true,
+          className: 'bg-indigo-500/30',
+        }
+      }]);
+    }
 
     // Ctrl/Cmd + Enter -> Submit Code
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      // We grab the value directly from the editor instance to prevent stale React closures
-      const currentCode = editor.getValue();
+    targetEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      const currentCode = targetEditor.getValue();
       onSubmit(currentCode);
     });
 
     // Ctrl/Cmd + Shift + R -> Run Sample Tests
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyR, () => {
+    targetEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyR, () => {
       if (onRunSamples) {
         onRunSamples();
       }
+    });
+  };
+
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    setupEditorBindings(editor, monaco);
+  };
+
+  const handleDiffEditorDidMount = (diffEditor: any, monaco: any) => {
+    const modifiedEditor = diffEditor.getModifiedEditor();
+    setupEditorBindings(modifiedEditor, monaco);
+    
+    // Subscribe to changes in diff mode
+    modifiedEditor.onDidChangeModelContent(() => {
+      handleEditorChange(modifiedEditor.getValue());
     });
   };
 
@@ -78,26 +108,40 @@ export default function CodeEditor(props: CodeEditorProps) {
     }
   }, [props.highlightedLine]);
 
+  const commonOptions = {
+    minimap: { enabled: false },
+    fontSize: 15,
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    padding: { top: 24, bottom: 24 },
+    scrollBeyondLastLine: false,
+    smoothScrolling: true,
+    cursorBlinking: "smooth",
+    contextmenu: false, 
+  };
+
   return (
     <div className="w-full h-full absolute inset-0">
-      <Editor
-        height="100%"
-        language={language}
-        theme="vs-dark" 
-        value={code}
-        onChange={handleEditorChange}
-        onMount={handleEditorDidMount}
-        options={{
-          minimap: { enabled: false },
-          fontSize: 15,
-          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          padding: { top: 24, bottom: 24 },
-          scrollBeyondLastLine: false,
-          smoothScrolling: true,
-          cursorBlinking: "smooth",
-          contextmenu: false, 
-        }}
-      />
+      {isDiffMode ? (
+        <DiffEditor
+          height="100%"
+          language={language}
+          theme="vs-dark"
+          original={diffOriginalCode || ""}
+          modified={code}
+          onMount={handleDiffEditorDidMount}
+          options={commonOptions as any}
+        />
+      ) : (
+        <Editor
+          height="100%"
+          language={language}
+          theme="vs-dark" 
+          value={code}
+          onChange={handleEditorChange}
+          onMount={handleEditorDidMount}
+          options={commonOptions as any}
+        />
+      )}
     </div>
   );
 }
